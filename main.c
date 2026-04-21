@@ -7,7 +7,7 @@ int compara(const void *a, const void *b){
 }
 
 void ordenar_externo(int M){
-    FILE *entrada = fopen("C://Users//HOME//Documents//ED II//T1//dados.txt", "rt");
+    FILE *entrada = fopen("C:/Users/HOME/Documents/ED II/T1/dados.txt", "r");
     if(entrada == NULL) {
         printf("Erro: arquivo dados.txt nao encontrado");
         exit(1);
@@ -16,25 +16,41 @@ void ordenar_externo(int M){
     char filename[20];
     int num_arquivos = 0;
     int i;
-//Gerando blocos ordenados
-    while(!feof(entrada)){
-        int count = 0;
-        while(count < M && fscanf(entrada, "%d%*c", &buffer[count]) == 1){
-            count++;
-        }
+// Gerando blocos ordenados
+int count = 0;
+// O loop principal agora é o próprio fscanf
+while (fscanf(entrada, "%d", &buffer[count]) == 1) {
+    // Após ler o número, consumimos o próximo caractere apenas se for ';' ou espaço
+    fgetc(entrada); 
+    
+    printf("Lido: %d (Posicao no bloco: %d)\n", buffer[count], count);
+    count++;
 
-        if(count > 0){
-            qsort(buffer, count, sizeof(int), compara);//QuickSort
-
-            sprintf(filename, "temp%d.dat", num_arquivos++);
-            FILE *temp = fopen(filename, "w");
-            for(i = 0; i < count; i++){
-                fprintf(temp, "%d%s", buffer[i], (i == count - 1?"" : ";"));
-            }
-            fclose(temp);
+    // Se encheu o buffer M ou se o arquivo acabou
+    if (count == M) {
+        qsort(buffer, count, sizeof(int), compara);
+        sprintf(filename, "temp%d.dat", num_arquivos++);
+        FILE *temp = fopen(filename, "w");
+        for (i = 0; i < count; i++) {
+            fprintf(temp, "%d%s", buffer[i], (i == count - 1 ? "" : ";"));
         }
+        fclose(temp);
+        printf("--- Bloco %d criado e salvo ---\n", num_arquivos - 1);
+        count = 0; // Reseta para o próximo bloco
     }
-    fclose(entrada);
+}
+
+// Trata o resto: Se o total de números não for múltiplo de M
+if (count > 0) {
+    qsort(buffer, count, sizeof(int), compara);
+    sprintf(filename, "temp%d.dat", num_arquivos++);
+    FILE *temp = fopen(filename, "w");
+    for (i = 0; i < count; i++) {
+        fprintf(temp, "%d%s", buffer[i], (i == count - 1 ? "" : ";"));
+    }
+    fclose(temp);
+    printf("--- Bloco final %d criado ---\n", num_arquivos - 1);
+}
 
     FILE **temps = malloc(num_arquivos * sizeof(FILE*));
     int *valores = malloc(num_arquivos * sizeof(int));
@@ -50,7 +66,7 @@ void ordenar_externo(int M){
         }   
     }
 
-    FILE *saida = fopen("dados_ordenados.txt", "w");
+    FILE *saida = fopen("C:/Users/HOME/Documents/ED II/T1/dados_ordenados.txt", "w");
     int first_write = 1;
 
     while (1){
