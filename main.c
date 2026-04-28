@@ -2,8 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-int compara(const void *a, const void *b){
-    return (*(int*)a - *(int*)b);
+void bubbleSort(int *vetor, int n){ //BubbleSort O(M^2)
+    int i, j, aux;
+    for(i = 0; i < n - 1; i++){
+        for(j = 0; j < n - i - 1; j++){
+            if(vetor[j] > vetor[j - 1]){
+                aux = vetor[j];
+                vetor[j] = vetor[j + 1];
+                vetor[j + 1] = aux;
+            }
+        }
+    }
 }
 
 void ordenar_externo(int M){
@@ -18,9 +27,9 @@ void ordenar_externo(int M){
     int i;
 // Gerando blocos ordenados
 int count = 0;
-// O loop principal agora é o próprio fscanf
-while (fscanf(entrada, "%d", &buffer[count]) == 1) {
-    // Após ler o número, consumimos o próximo caractere apenas se for ';' ou espaço
+// O loop principal é o próprio fscanf
+while (fscanf(entrada, "%d", &buffer[count]) == 1) { // O(N)
+    // Após ler o número, consumimos o próximo caractere apenas se for ';' ou " "
     fgetc(entrada); 
     
     printf("Lido: %d (Posicao no bloco: %d)\n", buffer[count], count);
@@ -28,11 +37,11 @@ while (fscanf(entrada, "%d", &buffer[count]) == 1) {
 
     // Se encheu o buffer M ou se o arquivo acabou
     if (count == M) {
-        qsort(buffer, count, sizeof(int), compara);
-        sprintf(filename, "temp%d.dat", num_arquivos++);
+        bubbleSort(buffer, count); 
+        sprintf(filename, "temp%d.dat", num_arquivos++); //O(N)
         FILE *temp = fopen(filename, "w");
         for (i = 0; i < count; i++) {
-            fprintf(temp, "%d%s", buffer[i], (i == count - 1 ? "" : ";"));
+            fprintf(temp, "%d%s", buffer[i], (i == count - 1 ? "" : ";")); //Função ternaria que coloca " " se for o ultimo valor se nao ";x"
         }
         fclose(temp);
         printf("--- Bloco %d criado e salvo ---\n", num_arquivos - 1);
@@ -42,7 +51,7 @@ while (fscanf(entrada, "%d", &buffer[count]) == 1) {
 
 // Trata o resto: Se o total de números não for múltiplo de M
 if (count > 0) {
-    qsort(buffer, count, sizeof(int), compara);
+    bubbleSort(buffer, count); 
     sprintf(filename, "temp%d.dat", num_arquivos++);
     FILE *temp = fopen(filename, "w");
     for (i = 0; i < count; i++) {
@@ -53,10 +62,10 @@ if (count > 0) {
 }
 
     FILE **temps = malloc(num_arquivos * sizeof(FILE*));
-    int *valores = malloc(num_arquivos * sizeof(int));
-    int *ativo = malloc(num_arquivos * sizeof(int));
+    int *valores = malloc(num_arquivos * sizeof(int)); 
+    int *ativo = malloc(num_arquivos * sizeof(int)); //Garante que o arquivo pare de ser lido se nao tiver mais dados
 
-    for(i = 0; i < num_arquivos; i++){
+    for(i = 0; i < num_arquivos; i++){ //MergeSort
         sprintf(filename, "temp%d.dat", i);
         temps[i] = fopen(filename, "r");
         if(fscanf(temps[i], "%d%*c", &valores[i]) == 1){
@@ -68,9 +77,9 @@ if (count > 0) {
 
     FILE *saida = fopen("C:/Users/HOME/Documents/ED II/T1/dados_ordenados.txt", "w");
     int first_write = 1;
-
+    //O(N * K)
     while (1){
-        int menor_idx = -1;
+        int menor_idx = -1; //Serve para guardar o menor valor atual
         for(i = 0; i < num_arquivos; i++){
             if(ativo[i]){
                 if(menor_idx == -1 || valores[i] < valores[menor_idx]){
@@ -80,12 +89,12 @@ if (count > 0) {
         }
         if(menor_idx == -1) break; //Se não houver mais nada nos arquivos "Break"
         
-            if(!first_write) fprintf(saida, ";");
+            if(!first_write) fprintf(saida, ";"); // Evitar erro com ";" sobrando, coloca so depois do primeiro numero
             fprintf(saida, "%d", valores[menor_idx]);
             first_write = 0;
 
-            if(fscanf(temps[menor_idx], "%d%*c", &valores[menor_idx]) != 1){
-                ativo[menor_idx] = 0;            
+            if(fscanf(temps[menor_idx], "%d%*c", &valores[menor_idx]) != 1){ //Tenta ler o proximo numero do mesmo file
+                ativo[menor_idx] = 0; //Se nao houver, ele na vai mais ler este file
             }
     }
 
@@ -98,14 +107,27 @@ if (count > 0) {
     fclose(saida);
     free(buffer); free(temps); free(valores); free(ativo);
 
-    printf("resultado_ordenado.txt\n");
+    printf("dados_ordenado.txt\n");
     
 }
 
-int main(){
+int main() {
     int M;
-    if(scanf("%d", &M)==1){
-        ordenar_externo(M);
-    }
+
+    do {
+        printf("Digite a quantidade de memoria (M >= 1): ");
+        if (scanf("%d", &M) != 1) {
+            while (getchar() != '\n'); //Limpa o buffer em caso de uma letra ser digitada
+            M = 0;
+            printf("Erro: Digite um numero valido.\n");
+            continue;
+        }
+
+        if (M < 1) {
+            printf("Erro: O valor de M deve ser pelo menos 1.\n");
+        }
+    } while (M < 1);
+    ordenar_externo(M);
+    
     return 0;
 }
